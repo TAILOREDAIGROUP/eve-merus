@@ -1,23 +1,13 @@
 import { getSupabaseClient } from "./supabase";
-import type { Database } from "@/types/database";
-
-type Tables = Database["public"]["Tables"];
-type LibraryRow = Tables["libraries"]["Row"];
-type LibraryInsert = Tables["libraries"]["Insert"];
-type SkillRow = Tables["skills"]["Row"];
-type SkillInsert = Tables["skills"]["Insert"];
-type SkillUpdate = Tables["skills"]["Update"];
-type TestSetRow = Tables["test_sets"]["Row"];
-type TestSetInsert = Tables["test_sets"]["Insert"];
-type TestCaseRow = Tables["test_cases"]["Row"];
-type TestCaseInsert = Tables["test_cases"]["Insert"];
-type TestCaseUpdate = Tables["test_cases"]["Update"];
 
 // ── Libraries ──────────────────────────────────────────────
 
-export async function createLibrary(
-  data: LibraryInsert
-): Promise<LibraryRow> {
+export interface LibraryInsert {
+  name: string;
+  description?: string | null;
+}
+
+export async function createLibrary(data: LibraryInsert) {
   const { data: row, error } = await getSupabaseClient()
     .from("libraries")
     .insert(data)
@@ -27,7 +17,7 @@ export async function createLibrary(
   return row;
 }
 
-export async function listLibraries(): Promise<LibraryRow[]> {
+export async function listLibraries() {
   const { data, error } = await getSupabaseClient()
     .from("libraries")
     .select()
@@ -36,7 +26,7 @@ export async function listLibraries(): Promise<LibraryRow[]> {
   return data;
 }
 
-export async function getLibrary(id: string): Promise<LibraryRow | null> {
+export async function getLibrary(id: string) {
   const { data, error } = await getSupabaseClient()
     .from("libraries")
     .select()
@@ -48,7 +38,7 @@ export async function getLibrary(id: string): Promise<LibraryRow | null> {
   return data;
 }
 
-export async function deleteLibrary(id: string): Promise<void> {
+export async function deleteLibrary(id: string) {
   const { error } = await getSupabaseClient()
     .from("libraries")
     .delete()
@@ -58,9 +48,18 @@ export async function deleteLibrary(id: string): Promise<void> {
 
 // ── Skills ─────────────────────────────────────────────────
 
-export async function bulkInsertSkills(
-  skills: SkillInsert[]
-): Promise<SkillRow[]> {
+export interface SkillInsert {
+  library_id: string;
+  name: string;
+  description: string;
+  trigger_phrases?: string[];
+  content: string;
+  token_count?: number;
+  line_count?: number;
+  source_filename?: string | null;
+}
+
+export async function bulkInsertSkills(skills: SkillInsert[]) {
   const { data, error } = await getSupabaseClient()
     .from("skills")
     .insert(skills)
@@ -69,9 +68,7 @@ export async function bulkInsertSkills(
   return data;
 }
 
-export async function listSkillsByLibrary(
-  libraryId: string
-): Promise<SkillRow[]> {
+export async function listSkillsByLibrary(libraryId: string) {
   const { data, error } = await getSupabaseClient()
     .from("skills")
     .select()
@@ -81,7 +78,7 @@ export async function listSkillsByLibrary(
   return data;
 }
 
-export async function getSkill(id: string): Promise<SkillRow | null> {
+export async function getSkill(id: string) {
   const { data, error } = await getSupabaseClient()
     .from("skills")
     .select()
@@ -95,8 +92,8 @@ export async function getSkill(id: string): Promise<SkillRow | null> {
 
 export async function updateSkill(
   id: string,
-  updates: SkillUpdate
-): Promise<SkillRow> {
+  updates: Record<string, unknown>
+) {
   const { data, error } = await getSupabaseClient()
     .from("skills")
     .update({ ...updates, updated_at: new Date().toISOString() })
@@ -109,9 +106,13 @@ export async function updateSkill(
 
 // ── Test Sets ──────────────────────────────────────────────
 
-export async function createTestSet(
-  data: TestSetInsert
-): Promise<TestSetRow> {
+export interface TestSetInsert {
+  library_id: string;
+  name: string;
+  description?: string | null;
+}
+
+export async function createTestSet(data: TestSetInsert) {
   const { data: row, error } = await getSupabaseClient()
     .from("test_sets")
     .insert(data)
@@ -121,9 +122,7 @@ export async function createTestSet(
   return row;
 }
 
-export async function listTestSets(
-  libraryId?: string
-): Promise<TestSetRow[]> {
+export async function listTestSets(libraryId?: string) {
   let query = getSupabaseClient()
     .from("test_sets")
     .select()
@@ -136,7 +135,7 @@ export async function listTestSets(
   return data;
 }
 
-export async function getTestSet(id: string): Promise<TestSetRow | null> {
+export async function getTestSet(id: string) {
   const { data, error } = await getSupabaseClient()
     .from("test_sets")
     .select()
@@ -148,7 +147,7 @@ export async function getTestSet(id: string): Promise<TestSetRow | null> {
   return data;
 }
 
-export async function deleteTestSet(id: string): Promise<void> {
+export async function deleteTestSet(id: string) {
   const { error } = await getSupabaseClient()
     .from("test_sets")
     .delete()
@@ -158,9 +157,17 @@ export async function deleteTestSet(id: string): Promise<void> {
 
 // ── Test Cases ─────────────────────────────────────────────
 
-export async function bulkInsertTestCases(
-  cases: TestCaseInsert[]
-): Promise<TestCaseRow[]> {
+export interface TestCaseInsert {
+  test_set_id: string;
+  request_text: string;
+  expected_skill: string;
+  expected_supporting?: string[];
+  should_not_trigger?: string[];
+  difficulty?: string;
+  cluster_tag?: string | null;
+}
+
+export async function bulkInsertTestCases(cases: TestCaseInsert[]) {
   const { data, error } = await getSupabaseClient()
     .from("test_cases")
     .insert(cases)
@@ -169,9 +176,7 @@ export async function bulkInsertTestCases(
   return data;
 }
 
-export async function listTestCases(
-  testSetId: string
-): Promise<TestCaseRow[]> {
+export async function listTestCases(testSetId: string) {
   const { data, error } = await getSupabaseClient()
     .from("test_cases")
     .select()
@@ -181,7 +186,7 @@ export async function listTestCases(
   return data;
 }
 
-export async function getTestCase(id: string): Promise<TestCaseRow | null> {
+export async function getTestCase(id: string) {
   const { data, error } = await getSupabaseClient()
     .from("test_cases")
     .select()
@@ -195,8 +200,8 @@ export async function getTestCase(id: string): Promise<TestCaseRow | null> {
 
 export async function updateTestCase(
   id: string,
-  updates: TestCaseUpdate
-): Promise<TestCaseRow> {
+  updates: Record<string, unknown>
+) {
   const { data, error } = await getSupabaseClient()
     .from("test_cases")
     .update(updates)
@@ -207,7 +212,7 @@ export async function updateTestCase(
   return data;
 }
 
-export async function deleteTestCase(id: string): Promise<void> {
+export async function deleteTestCase(id: string) {
   const { error } = await getSupabaseClient()
     .from("test_cases")
     .delete()
