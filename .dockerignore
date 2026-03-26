@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+__tests__
+coverage
+*.md
+!README.md
+.env*
