@@ -1,0 +1,86 @@
+{
+  "name": "golden-routing-test-v1",
+  "description": "Golden routing test set for dev tools skills library",
+  "test_cases": [
+    {
+      "request_text": "commit my changes with a good message",
+      "expected_skill": "commit",
+      "expected_supporting": [],
+      "should_not_trigger": ["deploy"],
+      "difficulty": "easy",
+      "cluster_tag": "git-operations"
+    },
+    {
+      "request_text": "review this pull request for bugs",
+      "expected_skill": "review-pr",
+      "expected_supporting": [],
+      "should_not_trigger": ["commit"],
+      "difficulty": "easy",
+      "cluster_tag": "code-review"
+    },
+    {
+      "request_text": "this function is throwing a null pointer exception",
+      "expected_skill": "debug",
+      "expected_supporting": [],
+      "should_not_trigger": ["refactor"],
+      "difficulty": "medium",
+      "cluster_tag": "debugging"
+    },
+    {
+      "request_text": "clean up this spaghetti code",
+      "expected_skill": "refactor",
+      "expected_supporting": [],
+      "should_not_trigger": ["debug"],
+      "difficulty": "medium",
+      "cluster_tag": "code-quality"
+    },
+    {
+      "request_text": "write unit tests for the auth module",
+      "expected_skill": "test-writer",
+      "expected_supporting": [],
+      "should_not_trigger": ["debug"],
+      "difficulty": "easy",
+      "cluster_tag": "testing"
+    },
+    {
+      "request_text": "what does this regex do",
+      "expected_skill": "explain",
+      "expected_supporting": [],
+      "should_not_trigger": ["refactor"],
+      "difficulty": "easy",
+      "cluster_tag": "learning"
+    },
+    {
+      "request_text": "ship this to production",
+      "expected_skill": "deploy",
+      "expected_supporting": [],
+      "should_not_trigger": ["commit"],
+      "difficulty": "easy",
+      "cluster_tag": "deployment"
+    },
+    {
+      "request_text": "the API returns 500 when I send a POST request",
+      "expected_skill": "debug",
+      "expected_supporting": ["explain"],
+      "should_not_trigger": ["deploy"],
+      "difficulty": "hard",
+      "cluster_tag": "debugging"
+    },
+    {
+      "request_text": "add test coverage for edge cases in the payment flow",
+      "expected_skill": "test-writer",
+      "expected_supporting": [],
+      "should_not_trigger": ["commit"],
+      "difficulty": "medium",
+      "cluster_tag": "testing"
+    },
+    {
+      "request_text": "walk me through how this middleware chain works",
+      "expected_skill": "explain",
+      "expected_supporting": [],
+      "should_not_trigger": ["refactor", "debug"],
+      "difficulty": "medium",
+      "cluster_tag": "learning"
+    }
+  ]
+}
