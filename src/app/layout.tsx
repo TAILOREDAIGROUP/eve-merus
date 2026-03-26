@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Sidebar } from "@/components/sidebar";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "EVE Merus — AI Skills Library Optimizer",
@@ -14,7 +16,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased flex">
+        <Sidebar />
+        <main className="flex-1 min-h-screen overflow-auto">
+          <div className="px-8 pt-6">
+            <Breadcrumbs />
+          </div>
+          {children}
+        </main>
+      </body>
     </html>
   );
 }
