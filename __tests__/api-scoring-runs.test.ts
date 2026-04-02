@@ -28,6 +28,10 @@ vi.mock("@/lib/scorer", () => ({
   scoreTestSet: vi.fn(),
 }));
 
+vi.mock('@/lib/auth/requireAuth', () => ({
+  requireAuth: vi.fn().mockResolvedValue({ user: { id: 'user-uuid-123' } }),
+}));
+
 import { POST, GET } from "@/app/api/scoring-runs/route";
 import { GET as GET_BY_ID } from "@/app/api/scoring-runs/[id]/route";
 import * as supabaseModule from "@/lib/supabase";

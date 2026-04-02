@@ -1,24 +1,28 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/supabase";
-import { exportExperimentsToTsv } from "@/lib/export";
+import { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseClient } from '@/lib/supabase';
+import { exportExperimentsToTsv } from '@/lib/export';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id } = await params;
-    const db = getSupabaseClient();
+    const db = await getSupabaseClient();
 
     const { data: run, error: runErr } = await db
-      .from("optimization_runs")
+      .from('optimization_runs')
       .select()
-      .eq("id", id)
+      .eq('id', id)
       .single();
 
-    if (runErr && runErr.code === "PGRST116") {
+    if (runErr && runErr.code === 'PGRST116') {
       return NextResponse.json(
-        { error: "Optimization run not found" },
+        { error: 'Optimization run not found' },
         { status: 404 }
       );
     }
@@ -27,10 +31,10 @@ export async function GET(
     }
 
     const { data: experiments, error: expErr } = await db
-      .from("experiments")
+      .from('experiments')
       .select()
-      .eq("run_id", id)
-      .order("created_at");
+      .eq('run_id', id)
+      .order('created_at');
 
     if (expErr) {
       return NextResponse.json({ error: expErr.message }, { status: 500 });
@@ -54,13 +58,13 @@ export async function GET(
     return new NextResponse(tsv, {
       status: 200,
       headers: {
-        "Content-Type": "text/tab-separated-values",
-        "Content-Disposition": `attachment; filename="results-${id}.tsv"`,
+        'Content-Type': 'text/tab-separated-values',
+        'Content-Disposition': `attachment; filename="results-${id}.tsv"`,
       },
     });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }

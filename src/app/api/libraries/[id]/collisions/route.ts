@@ -1,20 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/supabase";
-import { analyzeCollisions } from "@/lib/collision";
+import { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseClient } from '@/lib/supabase';
+import { analyzeCollisions } from '@/lib/collision';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id: libraryId } = await params;
-    const db = getSupabaseClient();
+    const db = await getSupabaseClient();
 
-    // Fetch skills
     const { data: skills, error: skillsErr } = await db
-      .from("skills")
-      .select("name, description, trigger_phrases")
-      .eq("library_id", libraryId);
+      .from('skills')
+      .select('name, description, trigger_phrases')
+      .eq('library_id', libraryId);
 
     if (skillsErr) {
       return NextResponse.json(
@@ -25,7 +28,7 @@ export async function POST(
 
     if (!skills || skills.length < 2) {
       return NextResponse.json(
-        { error: "Library needs at least 2 skills for collision analysis" },
+        { error: 'Library needs at least 2 skills for collision analysis' },
         { status: 400 }
       );
     }
@@ -39,9 +42,8 @@ export async function POST(
       libraryId
     );
 
-    // Store analysis
     const { data: row, error: insertErr } = await db
-      .from("collision_analyses")
+      .from('collision_analyses')
       .insert({
         library_id: libraryId,
         total_pairs: analysis.total_pairs,
@@ -66,7 +68,7 @@ export async function POST(
     return NextResponse.json({ analysis: row }, { status: 201 });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }
@@ -76,21 +78,24 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id: libraryId } = await params;
-    const db = getSupabaseClient();
+    const db = await getSupabaseClient();
 
     const { data, error } = await db
-      .from("collision_analyses")
+      .from('collision_analyses')
       .select()
-      .eq("library_id", libraryId)
-      .order("created_at", { ascending: false })
+      .eq('library_id', libraryId)
+      .order('created_at', { ascending: false })
       .limit(1)
       .single();
 
-    if (error && error.code === "PGRST116") {
+    if (error && error.code === 'PGRST116') {
       return NextResponse.json(
-        { error: "No collision analysis found. Run one first." },
+        { error: 'No collision analysis found. Run one first.' },
         { status: 404 }
       );
     }
@@ -101,7 +106,7 @@ export async function GET(
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }

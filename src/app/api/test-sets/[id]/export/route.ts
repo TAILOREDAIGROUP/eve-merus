@@ -1,17 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getTestSet, listTestCases } from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { getTestSet, listTestCases } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id } = await params;
 
     const testSet = await getTestSet(id);
     if (!testSet) {
       return NextResponse.json(
-        { error: "Test set not found" },
+        { error: 'Test set not found' },
         { status: 404 }
       );
     }
@@ -36,13 +40,13 @@ export async function GET(
     return new NextResponse(JSON.stringify(exportData, null, 2), {
       status: 200,
       headers: {
-        "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="${testSet.name.replace(/[^a-zA-Z0-9-_]/g, "_")}.json"`,
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="${testSet.name.replace(/[^a-zA-Z0-9-_]/g, '_')}.json"`,
       },
     });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }

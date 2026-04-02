@@ -8,6 +8,10 @@ vi.mock("@/lib/db", () => ({
   deleteLibrary: vi.fn(),
 }));
 
+vi.mock('@/lib/auth/requireAuth', () => ({
+  requireAuth: vi.fn().mockResolvedValue({ user: { id: 'user-uuid-123' } }),
+}));
+
 import { POST, GET } from "@/app/api/libraries/route";
 import {
   GET as GET_BY_ID,
@@ -55,6 +59,7 @@ describe("POST /api/libraries", () => {
     expect(mockDb.createLibrary).toHaveBeenCalledWith({
       name: "Test Library",
       description: "A test library",
+      user_id: 'user-uuid-123',
     });
   });
 
@@ -83,6 +88,7 @@ describe("POST /api/libraries", () => {
     expect(mockDb.createLibrary).toHaveBeenCalledWith({
       name: "Padded Name",
       description: "desc",
+      user_id: 'user-uuid-123',
     });
   });
 
@@ -99,6 +105,7 @@ describe("POST /api/libraries", () => {
     expect(mockDb.createLibrary).toHaveBeenCalledWith({
       name: "No Desc",
       description: null,
+      user_id: 'user-uuid-123',
     });
   });
 
@@ -119,7 +126,7 @@ describe("GET /api/libraries", () => {
   it("returns list of libraries", async () => {
     mockDb.listLibraries.mockResolvedValue([MOCK_LIBRARY]);
 
-    const res = await GET();
+    const res = await GET(makeRequest(undefined, 'GET'));
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -130,7 +137,7 @@ describe("GET /api/libraries", () => {
   it("returns empty array when no libraries", async () => {
     mockDb.listLibraries.mockResolvedValue([]);
 
-    const res = await GET();
+    const res = await GET(makeRequest(undefined, 'GET'));
     const body = await res.json();
 
     expect(body).toEqual([]);

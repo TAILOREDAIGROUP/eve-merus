@@ -1,27 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/supabase";
-import { scoreTestSet } from "@/lib/scorer";
-import type { SkillDefinition } from "@/lib/matcher";
+import { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseClient } from '@/lib/supabase';
+import { scoreTestSet } from '@/lib/scorer';
+import { requireAuth } from '@/lib/auth/requireAuth';
+import type { SkillDefinition } from '@/lib/matcher';
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const body = await request.json();
     const { library_id, test_set_id } = body;
 
     if (!library_id || !test_set_id) {
       return NextResponse.json(
-        { error: "library_id and test_set_id are required" },
+        { error: 'library_id and test_set_id are required' },
         { status: 400 }
       );
     }
 
-    const db = getSupabaseClient();
+    const db = await getSupabaseClient();
 
-    // Fetch library skills
     const { data: skills, error: skillsErr } = await db
-      .from("skills")
-      .select("name, description, trigger_phrases")
-      .eq("library_id", library_id);
+      .from('skills')
+      .select('name, description, trigger_phrases')
+      .eq('library_id', library_id);
 
     if (skillsErr) {
       return NextResponse.json(
@@ -32,16 +35,15 @@ export async function POST(request: NextRequest) {
 
     if (!skills || skills.length === 0) {
       return NextResponse.json(
-        { error: "Library has no skills" },
+        { error: 'Library has no skills' },
         { status: 400 }
       );
     }
 
-    // Fetch test cases
     const { data: testCases, error: casesErr } = await db
-      .from("test_cases")
-      .select("id, request_text, expected_skill, should_not_trigger")
-      .eq("test_set_id", test_set_id);
+      .from('test_cases')
+      .select('id, request_text, expected_skill, should_not_trigger')
+      .eq('test_set_id', test_set_id);
 
     if (casesErr) {
       return NextResponse.json(
@@ -52,12 +54,11 @@ export async function POST(request: NextRequest) {
 
     if (!testCases || testCases.length === 0) {
       return NextResponse.json(
-        { error: "Test set has no cases" },
+        { error: 'Test set has no cases' },
         { status: 400 }
       );
     }
 
-    // Run the scorer
     const skillDefs: SkillDefinition[] = skills.map((s) => ({
       name: s.name as string,
       description: s.description as string,
@@ -73,9 +74,8 @@ export async function POST(request: NextRequest) {
       skillDefs
     );
 
-    // Store scoring run
     const { data: run, error: runErr } = await db
-      .from("scoring_runs")
+      .from('scoring_runs')
       .insert({
         library_id,
         test_set_id,
@@ -97,7 +97,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Store per-case results
     const caseResultRows = scoringResult.case_results.map((cr, i) => ({
       run_id: run.id,
       test_case_id: testCases[i].id,
@@ -108,7 +107,7 @@ export async function POST(request: NextRequest) {
     }));
 
     const { error: resultsErr } = await db
-      .from("scoring_results")
+      .from('scoring_results')
       .insert(caseResultRows);
 
     if (resultsErr) {
@@ -135,18 +134,28 @@ export async function POST(request: NextRequest) {
     );
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
-    const { data, error } = await getSupabaseClient()
-      .from("scoring_runs")
+    const page = parseInt(request.nextUrl.searchParams.get('page') || '1', 10);
+    const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') || '50', 10), 100);
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const db = await getSupabaseClient();
+    const { data, error } = await db
+      .from('scoring_runs')
       .select()
-      .order("created_at", { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -155,7 +164,7 @@ export async function GET() {
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }

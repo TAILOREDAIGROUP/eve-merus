@@ -1,0 +1,1 @@
+-- Intelligence schema (applied by EVE Intelligence)

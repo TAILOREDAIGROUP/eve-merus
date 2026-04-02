@@ -10,6 +10,10 @@ vi.mock("@/lib/import", () => ({
   },
 }));
 
+vi.mock('@/lib/auth/requireAuth', () => ({
+  requireAuth: vi.fn().mockResolvedValue({ user: { id: 'user-uuid-123' } }),
+}));
+
 import { POST } from "@/app/api/import/route";
 import * as importModule from "@/lib/import";
 import { NextRequest } from "next/server";

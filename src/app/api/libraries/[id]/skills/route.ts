@@ -1,18 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getLibrary, bulkInsertSkills, listSkillsByLibrary } from "@/lib/db";
-import type { ParsedSkill } from "@/types";
+import { NextRequest, NextResponse } from 'next/server';
+import { getLibrary, bulkInsertSkills, listSkillsByLibrary } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/requireAuth';
+import type { ParsedSkill } from '@/types';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id: libraryId } = await params;
 
     const library = await getLibrary(libraryId);
     if (!library) {
       return NextResponse.json(
-        { error: "Library not found" },
+        { error: 'Library not found' },
         { status: 404 }
       );
     }
@@ -22,17 +26,16 @@ export async function POST(
 
     if (!Array.isArray(skills) || skills.length === 0) {
       return NextResponse.json(
-        { error: "skills array is required and must not be empty" },
+        { error: 'skills array is required and must not be empty' },
         { status: 400 }
       );
     }
 
-    // Validate each skill has required fields
     for (const skill of skills) {
       if (!skill.name || !skill.description || skill.content === undefined) {
         return NextResponse.json(
           {
-            error: `Each skill must have name, description, and content. Invalid: ${skill.name || "unnamed"}`,
+            error: `Each skill must have name, description, and content. Invalid: ${skill.name || 'unnamed'}`,
           },
           { status: 400 }
         );
@@ -58,7 +61,7 @@ export async function POST(
     );
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }
@@ -68,13 +71,16 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id: libraryId } = await params;
 
     const library = await getLibrary(libraryId);
     if (!library) {
       return NextResponse.json(
-        { error: "Library not found" },
+        { error: 'Library not found' },
         { status: 404 }
       );
     }
@@ -83,7 +89,7 @@ export async function GET(
     return NextResponse.json(skills);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }

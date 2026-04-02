@@ -1,22 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 import {
   getTestSet,
   listTestCases,
   bulkInsertTestCases,
-} from "@/lib/db";
-import { validateTestCaseBatch } from "@/lib/test-cases";
+} from '@/lib/db';
+import { validateTestCaseBatch } from '@/lib/test-cases';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id } = await params;
 
     const testSet = await getTestSet(id);
     if (!testSet) {
       return NextResponse.json(
-        { error: "Test set not found" },
+        { error: 'Test set not found' },
         { status: 404 }
       );
     }
@@ -25,7 +29,7 @@ export async function GET(
     return NextResponse.json(cases);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }
@@ -35,13 +39,16 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id } = await params;
 
     const testSet = await getTestSet(id);
     if (!testSet) {
       return NextResponse.json(
-        { error: "Test set not found" },
+        { error: 'Test set not found' },
         { status: 404 }
       );
     }
@@ -51,7 +58,7 @@ export async function POST(
 
     if (!Array.isArray(cases) || cases.length === 0) {
       return NextResponse.json(
-        { error: "test_cases array is required and must not be empty" },
+        { error: 'test_cases array is required and must not be empty' },
         { status: 400 }
       );
     }
@@ -61,7 +68,7 @@ export async function POST(
     if (validation.valid.length === 0) {
       return NextResponse.json(
         {
-          error: "No valid test cases found",
+          error: 'No valid test cases found',
           validation_errors: validation.errors,
         },
         { status: 400 }
@@ -75,7 +82,7 @@ export async function POST(
         expected_skill: tc.expected_skill,
         expected_supporting: tc.expected_supporting || [],
         should_not_trigger: tc.should_not_trigger || [],
-        difficulty: tc.difficulty || "medium",
+        difficulty: tc.difficulty || 'medium',
         cluster_tag: tc.cluster_tag || null,
       }))
     );
@@ -90,7 +97,7 @@ export async function POST(
     );
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }

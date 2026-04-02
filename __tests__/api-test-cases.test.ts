@@ -6,6 +6,10 @@ vi.mock("@/lib/db", () => ({
   deleteTestCase: vi.fn(),
 }));
 
+vi.mock('@/lib/auth/requireAuth', () => ({
+  requireAuth: vi.fn().mockResolvedValue({ user: { id: 'user-uuid-123' } }),
+}));
+
 import {
   GET,
   PUT,

@@ -1,26 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 import {
   createTestSet,
   listTestSets,
   getLibrary,
   bulkInsertTestCases,
-} from "@/lib/db";
-import { validateTestCaseBatch } from "@/lib/test-cases";
+} from '@/lib/db';
+import { validateTestCaseBatch } from '@/lib/test-cases';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const body = await request.json();
 
-    if (!body.name || typeof body.name !== "string") {
+    if (!body.name || typeof body.name !== 'string') {
       return NextResponse.json(
-        { error: "name is required" },
+        { error: 'name is required' },
         { status: 400 }
       );
     }
 
-    if (!body.library_id || typeof body.library_id !== "string") {
+    if (!body.library_id || typeof body.library_id !== 'string') {
       return NextResponse.json(
-        { error: "library_id is required" },
+        { error: 'library_id is required' },
         { status: 400 }
       );
     }
@@ -28,7 +32,7 @@ export async function POST(request: NextRequest) {
     const library = await getLibrary(body.library_id);
     if (!library) {
       return NextResponse.json(
-        { error: "Library not found" },
+        { error: 'Library not found' },
         { status: 404 }
       );
     }
@@ -39,7 +43,6 @@ export async function POST(request: NextRequest) {
       description: body.description?.trim() || null,
     });
 
-    // If test_cases are provided inline, import them
     let importedCases: unknown[] = [];
     let validationErrors: { index: number; errors: string[] }[] = [];
 
@@ -55,7 +58,7 @@ export async function POST(request: NextRequest) {
             expected_skill: tc.expected_skill,
             expected_supporting: tc.expected_supporting || [],
             should_not_trigger: tc.should_not_trigger || [],
-            difficulty: tc.difficulty || "medium",
+            difficulty: tc.difficulty || 'medium',
             cluster_tag: tc.cluster_tag || null,
           }))
         );
@@ -72,21 +75,26 @@ export async function POST(request: NextRequest) {
     );
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
 export async function GET(request: NextRequest) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const libraryId =
-      request.nextUrl.searchParams.get("library_id") || undefined;
-    const testSets = await listTestSets(libraryId);
+      request.nextUrl.searchParams.get('library_id') || undefined;
+    const page = parseInt(request.nextUrl.searchParams.get('page') || '1', 10);
+    const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50', 10);
+    const testSets = await listTestSets(libraryId, page, Math.min(limit, 100));
     return NextResponse.json(testSets);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }

@@ -112,3 +112,33 @@ CREATE INDEX idx_test_cases_set ON test_cases(test_set_id);
 CREATE INDEX idx_scoring_results_run ON scoring_results(run_id);
 CREATE INDEX idx_experiments_run ON experiments(run_id);
 CREATE INDEX idx_scoring_runs_library ON scoring_runs(library_id);
+-- Collision analysis results
+CREATE TABLE collision_analyses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  library_id UUID NOT NULL REFERENCES libraries(id) ON DELETE CASCADE,
+  total_pairs INTEGER NOT NULL,
+  critical_count INTEGER NOT NULL DEFAULT 0,
+  high_count INTEGER NOT NULL DEFAULT 0,
+  medium_count INTEGER NOT NULL DEFAULT 0,
+  low_count INTEGER NOT NULL DEFAULT 0,
+  clean_count INTEGER NOT NULL DEFAULT 0,
+  overall_collision_score INTEGER NOT NULL DEFAULT 0,
+  pairs JSONB NOT NULL DEFAULT '[]',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_collision_analyses_library ON collision_analyses(library_id);
+-- Health score history for tracking over time
+CREATE TABLE health_scores (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  library_id UUID NOT NULL REFERENCES libraries(id) ON DELETE CASCADE,
+  total INTEGER NOT NULL,
+  routing_accuracy INTEGER NOT NULL DEFAULT 0,
+  collision_score INTEGER NOT NULL DEFAULT 0,
+  token_efficiency INTEGER NOT NULL DEFAULT 0,
+  dead_skills_score INTEGER NOT NULL DEFAULT 0,
+  has_scoring_data BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_health_scores_library ON health_scores(library_id);

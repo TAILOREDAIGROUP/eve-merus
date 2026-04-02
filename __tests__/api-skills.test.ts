@@ -8,6 +8,10 @@ vi.mock("@/lib/db", () => ({
   updateSkill: vi.fn(),
 }));
 
+vi.mock('@/lib/auth/requireAuth', () => ({
+  requireAuth: vi.fn().mockResolvedValue({ user: { id: 'user-uuid-123' } }),
+}));
+
 import { POST, GET } from "@/app/api/libraries/[id]/skills/route";
 import {
   GET as GET_SKILL,

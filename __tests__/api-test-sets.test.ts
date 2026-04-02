@@ -12,6 +12,10 @@ vi.mock("@/lib/db", () => ({
   listTestCases: vi.fn(),
 }));
 
+vi.mock('@/lib/auth/requireAuth', () => ({
+  requireAuth: vi.fn().mockResolvedValue({ user: { id: 'user-uuid-123' } }),
+}));
+
 import { POST, GET } from "@/app/api/test-sets/route";
 import {
   GET as GET_BY_ID,

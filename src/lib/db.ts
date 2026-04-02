@@ -1,49 +1,54 @@
-import { getSupabaseClient } from "./supabase";
+import { getSupabaseClient } from './supabase';
 
 // ── Libraries ──────────────────────────────────────────────
 
 export interface LibraryInsert {
   name: string;
   description?: string | null;
+  user_id: string;
 }
 
 export async function createLibrary(data: LibraryInsert) {
-  const { data: row, error } = await getSupabaseClient()
-    .from("libraries")
+  const db = await getSupabaseClient();
+  const { data: row, error } = await db
+    .from('libraries')
     .insert(data)
     .select()
     .single();
-  if (error) throw new DatabaseError("createLibrary", error.message);
+  if (error) throw new DatabaseError('createLibrary', error.message);
   return row;
 }
 
-export async function listLibraries() {
-  const { data, error } = await getSupabaseClient()
-    .from("libraries")
+export async function listLibraries(page = 1, limit = 50) {
+  const db = await getSupabaseClient();
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+  const { data, error } = await db
+    .from('libraries')
     .select()
-    .order("created_at", { ascending: false });
-  if (error) throw new DatabaseError("listLibraries", error.message);
+    .order('created_at', { ascending: false })
+    .range(from, to);
+  if (error) throw new DatabaseError('listLibraries', error.message);
   return data;
 }
 
 export async function getLibrary(id: string) {
-  const { data, error } = await getSupabaseClient()
-    .from("libraries")
+  const db = await getSupabaseClient();
+  const { data, error } = await db
+    .from('libraries')
     .select()
-    .eq("id", id)
+    .eq('id', id)
     .single();
-  if (error && error.code !== "PGRST116") {
-    throw new DatabaseError("getLibrary", error.message);
+  if (error && error.code !== 'PGRST116') {
+    throw new DatabaseError('getLibrary', error.message);
   }
   return data;
 }
 
 export async function deleteLibrary(id: string) {
-  const { error } = await getSupabaseClient()
-    .from("libraries")
-    .delete()
-    .eq("id", id);
-  if (error) throw new DatabaseError("deleteLibrary", error.message);
+  const db = await getSupabaseClient();
+  const { error } = await db.from('libraries').delete().eq('id', id);
+  if (error) throw new DatabaseError('deleteLibrary', error.message);
 }
 
 // ── Skills ─────────────────────────────────────────────────
@@ -60,32 +65,32 @@ export interface SkillInsert {
 }
 
 export async function bulkInsertSkills(skills: SkillInsert[]) {
-  const { data, error } = await getSupabaseClient()
-    .from("skills")
-    .insert(skills)
-    .select();
-  if (error) throw new DatabaseError("bulkInsertSkills", error.message);
+  const db = await getSupabaseClient();
+  const { data, error } = await db.from('skills').insert(skills).select();
+  if (error) throw new DatabaseError('bulkInsertSkills', error.message);
   return data;
 }
 
 export async function listSkillsByLibrary(libraryId: string) {
-  const { data, error } = await getSupabaseClient()
-    .from("skills")
+  const db = await getSupabaseClient();
+  const { data, error } = await db
+    .from('skills')
     .select()
-    .eq("library_id", libraryId)
-    .order("name");
-  if (error) throw new DatabaseError("listSkillsByLibrary", error.message);
+    .eq('library_id', libraryId)
+    .order('name');
+  if (error) throw new DatabaseError('listSkillsByLibrary', error.message);
   return data;
 }
 
 export async function getSkill(id: string) {
-  const { data, error } = await getSupabaseClient()
-    .from("skills")
+  const db = await getSupabaseClient();
+  const { data, error } = await db
+    .from('skills')
     .select()
-    .eq("id", id)
+    .eq('id', id)
     .single();
-  if (error && error.code !== "PGRST116") {
-    throw new DatabaseError("getSkill", error.message);
+  if (error && error.code !== 'PGRST116') {
+    throw new DatabaseError('getSkill', error.message);
   }
   return data;
 }
@@ -94,13 +99,14 @@ export async function updateSkill(
   id: string,
   updates: Record<string, unknown>
 ) {
-  const { data, error } = await getSupabaseClient()
-    .from("skills")
+  const db = await getSupabaseClient();
+  const { data, error } = await db
+    .from('skills')
     .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq("id", id)
+    .eq('id', id)
     .select()
     .single();
-  if (error) throw new DatabaseError("updateSkill", error.message);
+  if (error) throw new DatabaseError('updateSkill', error.message);
   return data;
 }
 
@@ -113,46 +119,50 @@ export interface TestSetInsert {
 }
 
 export async function createTestSet(data: TestSetInsert) {
-  const { data: row, error } = await getSupabaseClient()
-    .from("test_sets")
+  const db = await getSupabaseClient();
+  const { data: row, error } = await db
+    .from('test_sets')
     .insert(data)
     .select()
     .single();
-  if (error) throw new DatabaseError("createTestSet", error.message);
+  if (error) throw new DatabaseError('createTestSet', error.message);
   return row;
 }
 
-export async function listTestSets(libraryId?: string) {
-  let query = getSupabaseClient()
-    .from("test_sets")
+export async function listTestSets(libraryId?: string, page = 1, limit = 50) {
+  const db = await getSupabaseClient();
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+  let query = db
+    .from('test_sets')
     .select()
-    .order("created_at", { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(from, to);
   if (libraryId) {
-    query = query.eq("library_id", libraryId);
+    query = query.eq('library_id', libraryId);
   }
   const { data, error } = await query;
-  if (error) throw new DatabaseError("listTestSets", error.message);
+  if (error) throw new DatabaseError('listTestSets', error.message);
   return data;
 }
 
 export async function getTestSet(id: string) {
-  const { data, error } = await getSupabaseClient()
-    .from("test_sets")
+  const db = await getSupabaseClient();
+  const { data, error } = await db
+    .from('test_sets')
     .select()
-    .eq("id", id)
+    .eq('id', id)
     .single();
-  if (error && error.code !== "PGRST116") {
-    throw new DatabaseError("getTestSet", error.message);
+  if (error && error.code !== 'PGRST116') {
+    throw new DatabaseError('getTestSet', error.message);
   }
   return data;
 }
 
 export async function deleteTestSet(id: string) {
-  const { error } = await getSupabaseClient()
-    .from("test_sets")
-    .delete()
-    .eq("id", id);
-  if (error) throw new DatabaseError("deleteTestSet", error.message);
+  const db = await getSupabaseClient();
+  const { error } = await db.from('test_sets').delete().eq('id', id);
+  if (error) throw new DatabaseError('deleteTestSet', error.message);
 }
 
 // ── Test Cases ─────────────────────────────────────────────
@@ -168,32 +178,32 @@ export interface TestCaseInsert {
 }
 
 export async function bulkInsertTestCases(cases: TestCaseInsert[]) {
-  const { data, error } = await getSupabaseClient()
-    .from("test_cases")
-    .insert(cases)
-    .select();
-  if (error) throw new DatabaseError("bulkInsertTestCases", error.message);
+  const db = await getSupabaseClient();
+  const { data, error } = await db.from('test_cases').insert(cases).select();
+  if (error) throw new DatabaseError('bulkInsertTestCases', error.message);
   return data;
 }
 
 export async function listTestCases(testSetId: string) {
-  const { data, error } = await getSupabaseClient()
-    .from("test_cases")
+  const db = await getSupabaseClient();
+  const { data, error } = await db
+    .from('test_cases')
     .select()
-    .eq("test_set_id", testSetId)
-    .order("created_at");
-  if (error) throw new DatabaseError("listTestCases", error.message);
+    .eq('test_set_id', testSetId)
+    .order('created_at');
+  if (error) throw new DatabaseError('listTestCases', error.message);
   return data;
 }
 
 export async function getTestCase(id: string) {
-  const { data, error } = await getSupabaseClient()
-    .from("test_cases")
+  const db = await getSupabaseClient();
+  const { data, error } = await db
+    .from('test_cases')
     .select()
-    .eq("id", id)
+    .eq('id', id)
     .single();
-  if (error && error.code !== "PGRST116") {
-    throw new DatabaseError("getTestCase", error.message);
+  if (error && error.code !== 'PGRST116') {
+    throw new DatabaseError('getTestCase', error.message);
   }
   return data;
 }
@@ -202,22 +212,21 @@ export async function updateTestCase(
   id: string,
   updates: Record<string, unknown>
 ) {
-  const { data, error } = await getSupabaseClient()
-    .from("test_cases")
+  const db = await getSupabaseClient();
+  const { data, error } = await db
+    .from('test_cases')
     .update(updates)
-    .eq("id", id)
+    .eq('id', id)
     .select()
     .single();
-  if (error) throw new DatabaseError("updateTestCase", error.message);
+  if (error) throw new DatabaseError('updateTestCase', error.message);
   return data;
 }
 
 export async function deleteTestCase(id: string) {
-  const { error } = await getSupabaseClient()
-    .from("test_cases")
-    .delete()
-    .eq("id", id);
-  if (error) throw new DatabaseError("deleteTestCase", error.message);
+  const db = await getSupabaseClient();
+  const { error } = await db.from('test_cases').delete().eq('id', id);
+  if (error) throw new DatabaseError('deleteTestCase', error.message);
 }
 
 // ── Error ──────────────────────────────────────────────────
@@ -228,6 +237,6 @@ export class DatabaseError extends Error {
     message: string
   ) {
     super(`Database error in ${operation}: ${message}`);
-    this.name = "DatabaseError";
+    this.name = 'DatabaseError';
   }
 }

@@ -1,18 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getTestCase, updateTestCase, deleteTestCase } from "@/lib/db";
-import { validateTestCase } from "@/lib/test-cases";
+import { NextRequest, NextResponse } from 'next/server';
+import { getTestCase, updateTestCase, deleteTestCase } from '@/lib/db';
+import { requireAuth } from '@/lib/auth/requireAuth';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id } = await params;
     const tc = await getTestCase(id);
 
     if (!tc) {
       return NextResponse.json(
-        { error: "Test case not found" },
+        { error: 'Test case not found' },
         { status: 404 }
       );
     }
@@ -20,7 +23,7 @@ export async function GET(
     return NextResponse.json(tc);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }
@@ -30,13 +33,16 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id } = await params;
 
     const existing = await getTestCase(id);
     if (!existing) {
       return NextResponse.json(
-        { error: "Test case not found" },
+        { error: 'Test case not found' },
         { status: 404 }
       );
     }
@@ -45,9 +51,9 @@ export async function PUT(
     const updates: Record<string, unknown> = {};
 
     if (body.request_text !== undefined) {
-      if (typeof body.request_text !== "string" || !body.request_text.trim()) {
+      if (typeof body.request_text !== 'string' || !body.request_text.trim()) {
         return NextResponse.json(
-          { error: "request_text must be a non-empty string" },
+          { error: 'request_text must be a non-empty string' },
           { status: 400 }
         );
       }
@@ -56,11 +62,11 @@ export async function PUT(
 
     if (body.expected_skill !== undefined) {
       if (
-        typeof body.expected_skill !== "string" ||
+        typeof body.expected_skill !== 'string' ||
         !body.expected_skill.trim()
       ) {
         return NextResponse.json(
-          { error: "expected_skill must be a non-empty string" },
+          { error: 'expected_skill must be a non-empty string' },
           { status: 400 }
         );
       }
@@ -74,9 +80,9 @@ export async function PUT(
       updates.should_not_trigger = body.should_not_trigger;
     }
     if (body.difficulty !== undefined) {
-      if (!["easy", "medium", "hard"].includes(body.difficulty)) {
+      if (!['easy', 'medium', 'hard'].includes(body.difficulty)) {
         return NextResponse.json(
-          { error: "difficulty must be easy, medium, or hard" },
+          { error: 'difficulty must be easy, medium, or hard' },
           { status: 400 }
         );
       }
@@ -88,7 +94,7 @@ export async function PUT(
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(
-        { error: "No valid fields to update" },
+        { error: 'No valid fields to update' },
         { status: 400 }
       );
     }
@@ -97,7 +103,7 @@ export async function PUT(
     return NextResponse.json(updated);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }
@@ -107,13 +113,16 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const { id } = await params;
 
     const existing = await getTestCase(id);
     if (!existing) {
       return NextResponse.json(
-        { error: "Test case not found" },
+        { error: 'Test case not found' },
         { status: 404 }
       );
     }
@@ -122,7 +131,7 @@ export async function DELETE(
     return NextResponse.json({ deleted: true });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : 'Internal server error' },
       { status: 500 }
     );
   }

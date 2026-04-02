@@ -6,6 +6,7 @@ export interface ImportInput {
   library_name: string;
   library_description?: string;
   files: { content: string; filename: string }[];
+  user_id: string;
 }
 
 export interface ImportResult {
@@ -42,6 +43,7 @@ export async function importSkillLibrary(
   const library = await createLibrary({
     name: input.library_name.trim(),
     description: input.library_description?.trim() || null,
+    user_id: input.user_id,
   });
 
   // Step 3: Insert skills
